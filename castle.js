@@ -58,4 +58,4 @@ function sortLand(arr) {
   return arr;
 }
 
-console.log(castleCount([2,6,1,4]));
+console.log(castleCount([2,6,7,8,9,7,9]));

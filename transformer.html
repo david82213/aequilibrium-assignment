@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Transformer</title>
+  </head>
+  <body onload=transformer()>
+
+    <ul id="list"></ul>
+    <div id="result"></p>
+
+    <script>
+    function transformer() {
+      let autobot = [], deception = [];
+      let sortedAutobot = [], sortedDeception = [];
+      let autobotTeam = [], deceptionTeam = [];
+      let battleCount = 0, autobotWin = 0, deceptionWin = 0;
+      let autobotRating = 0, deceptionRating = 0;
+      let boss1 = false, boss2 = false;
+      let robot = prompt("Please enter your name (type 'exit' when done): ");
+
+      while (robot != 'exit') {
+        if (robot.length > 0) {
+          // break the string input into array of elements separated by commas
+          robot = robot.split(",");
+
+          // do a loop to get rid of empty spaces of each element in case of user input
+          for (let i = 1; i < robot.length; i++) {
+            robot[i] = robot[i].replace(/ /g,'');
+          }
+
+          // capitalize the transformer name
+          if (robot[0].includes(" ")) {
+            let tempName;
+            tempName = robot[0].split(" ");
+            tempName[0] = tempName[0].charAt(0).toUpperCase() + tempName[0].slice(1);
+            tempName[1] = tempName[1].charAt(0).toUpperCase() + tempName[1].slice(1);
+            robot[0] = tempName.join(" ");
+
+          } else {
+            robot[0] = robot[0].charAt(0).toUpperCase() + robot[0].slice(1);
+          }
+
+          // check if all required information are inputted
+          if (robot.length != 10) {
+            alert("Please enter all information about this transformer.\n I.e. Name, Clan, Strength, Intelligence, Speed, Endurance, Rank, Courage, Firepower, Skill");
+            robot = prompt("Please enter your name (type 'exit' when done): ");
+            continue;
+          }
+
+          // check duplicate leader
+          if ((boss1 && robot[0] === 'Optimus Prime') || (boss2 && robot[0] === 'Predaking')) {
+            alert('Can not enter more than one identical leader');
+            autobot = [];
+            deception = [];
+            break;
+          }
+          if (robot[0] === 'Optimus Prime' && !boss1) {
+            boss1 = true;
+          } else if (robot[0] === 'Predaking' && !boss2) {
+            boss2 = true;
+          }
+
+          // capitalize the group abbrev
+          robot[1] = robot[1].charAt(0).toUpperCase();
+          // group transformers into their belonging side
+          if (robot[1] == 'A' || robot[1] == 'D') {
+            (robot[1] == 'A') ? autobot.push(robot) : deception.push(robot);
+            // append the transformer input to the list
+            document.getElementById("list").innerHTML += `<li>${robot}</li>`;
+          } else {
+            alert('Please enter A or D for the clan.');
+          }
+        }
+        robot = prompt("Please enter your name (type 'exit' when done): ");
+      }
+
+      // sort the groups by their ranks
+      sortedAutobot = autobot.sort(rankCompare);
+      sortedDeception = deception.sort(rankCompare);
+      // battle begins
+      while (sortedAutobot.length && sortedDeception.length) {
+        // if it is optimus prime and predaking
+        if ((sortedAutobot[0][0].toLowerCase() == 'optimus prime') &&
+            (sortedDeception[0][0].toLowerCase() == 'predaking')) {
+          battleCount++;
+          sortedAutobot = [];
+          sortedDeception = [];
+          break;
+        } else if ((sortedAutobot[0][0].toLowerCase() == 'optimus prime') &&
+                   (sortedDeception[0][0].toLowerCase() != 'predaking')) {
+          // if its optimus prime vs any fighter
+          autobotWin++;
+          battleCount++;
+          autobotTeam.push(sortedAutobot.shift()[0]);
+          sortedDeception.shift();
+          continue;
+        } else if ((sortedAutobot[0][0].toLowerCase() != 'optimus prime') &&
+                   (sortedDeception[0][0].toLowerCase() == 'predaking')) {
+          // if its predaking vs any fighter
+          deceptionWin++;
+          battleCount++;
+          sortedAutobot.shift();
+          deceptionTeam.push(sortedDeception.shift()[0]);
+          continue;
+        }
+
+        // calculate overall rating
+        autobotRating = sortedAutobot[0][2] + sortedAutobot[0][3] + sortedAutobot[0][4] +
+                        sortedAutobot[0][5] + sortedAutobot[8];
+        deceptionRating = sortedDeception[0][2] + sortedDeception[0][3] + sortedDeception[0][4] +
+                          sortedDeception[0][5] + sortedDeception[8];
+        // cases of courage and strength or skill or overall rating
+        // if decepticons win
+        if (((sortedAutobot[0][2] + 3 <= sortedDeception[0][2]) &&
+             (sortedAutobot[0][7] + 4 <= sortedDeception[0][7]))||
+            (sortedAutobot[0][9] + 3 <= sortedDeception[0][9])  ||
+            (autobotRating < deceptionRating)
+           ) {
+          deceptionWin++;
+          battleCount++;
+          sortedAutobot.shift();
+          deceptionTeam.push(sortedDeception.shift()[0]);
+          continue;
+        }
+
+        // if autobots win
+        if (((sortedAutobot[0][2] >= sortedDeception[0][2] + 3) &&
+             (sortedAutobot[0][7] >= sortedDeception[0][7] + 4))||
+            (sortedAutobot[0][9] >= sortedDeception[0][9] + 3)  ||
+            (autobotRating > deceptionRating)
+           ) {
+          autobotWin++;
+          battleCount++;
+          autobotTeam.push(sortedAutobot.shift()[0]);
+          sortedDeception.shift();
+          continue;
+        }
+
+        // if ties
+        if (autobotRating == deceptionRating) {
+          battleCount++;
+          sortedAutobot.shift();
+          sortedDeception.shift();
+          continue;
+        }
+      }
+
+      // display result
+      displayResult(battleCount, autobotWin, deceptionWin, autobotTeam,
+                    deceptionTeam, sortedAutobot, sortedDeception);
+    }
+
+    function displayResult(battleCount, autobotWin, deceptionWin, autobotTeam, deceptionTeam, sortedAutobot, sortedDeception) {
+      let autobotLeft = [], deceptionLeft = [];
+      document.getElementById("result").innerHTML += '<h3>Result:</h3>\n';
+      document.getElementById("result").innerHTML += `<p>${battleCount} battle(s)</p>`;
+      if (autobotWin > deceptionWin) {
+        autobotTeam = autobotTeam.join(", ");
+        document.getElementById("result").innerHTML += `<p>Winning team (Autobots): ${autobotTeam}</p>`;
+
+        if (sortedDeception.length > 0) {
+          for (let i = 0; i < sortedDeception.length; i++) {
+            let name = sortedDeception[i][0];
+            deceptionLeft.push(name);
+          }
+          deceptionLeft = deceptionLeft.join(", ");
+          document.getElementById("result").innerHTML += `<p>Survivors from the losing team (Decepticons): ${deceptionLeft}</p>`;
+        } else {
+          document.getElementById("result").innerHTML += `<p>Survivors from the losing team (Decepticons): none</p>`;
+        }
+      } else if (autobotWin < deceptionWin) {
+        deceptionTeam = deceptionTeam.join(", ");
+        document.getElementById("result").innerHTML += `<p>Winning team (Decepticons): ${deceptionTeam}</p>`;
+
+        if (sortedAutobot.length > 0) {
+          for (let i = 0; i < sortedAutobot.length; i++) {
+            let name = sortedAutobot[i][0];
+            autobotLeft.push(name);
+          }
+          autobotLeft = autobotLeft.join(", ");
+          document.getElementById("result").innerHTML += `<p>Survivors from the losing team (Autobots): ${autobotLeft}</p>`;
+        } else {
+          document.getElementById("result").innerHTML += `<p>Survivors from the losing team (Autobots): none</p>`;
+        }
+      } else {
+        document.getElementById("result").innerHTML += '<p>No one wins</p>';
+      }
+    }
+
+    function rankCompare(a, b) {
+      if (a[6] > b[6]) return -1;
+      if (a[6] < b[6]) return 1;
+      return 0;
+    }
+    </script>
+  </body>
+</html>
